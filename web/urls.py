@@ -1,0 +1,13 @@
+from django.urls import path, include
+from . import views
+
+urlpatterns = [
+    path('', views.home_view, name='home'),
+    path('login/', views.login_view, name='login'),
+    path('signup/', views.signup_view, name='signup'),
+    path('logout/', views.logout_view, name="logout"),
+    path('verify-account/', views.verify_account_view, name='verify_account'),
+    path('change-password/', views.change_password_view, name='change_password'),
+    path('reset-password/', views.reset_password_view, name='reset_password'),
+    path("__reload__/", include("django_browser_reload.urls")),
+]

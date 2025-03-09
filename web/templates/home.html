@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<nav class="bg-gradient-to-r from-blue-700 to-blue-900 text-white shadow-md">
+  <div class="max-w-7xl mx-auto flex justify-between items-center p-4">
+    <div class="flex items-center">
+      <img src="{% static 'logo.png' %}" alt="Logo" class="h-12 mr-4">
+      <h1 class="text-2xl font-extrabold">Kisembo Academy</h1>
+    </div>
+    <div class="relative">
+      <div id="account-dropdown" class="cursor-pointer hover:text-gray-200 transition duration-150">
+        {% if is_authenticated %}
+        {{ user.name }}
+        {% else %}
+        Account
+        {% endif %}
+        ▼
+      </div>
+      <div id="dropdown-menu" class="hidden absolute right-0 bg-white text-black mt-2 p-4 shadow-lg rounded-md">
+        {% if topics %}
+        {% for topic in topics %}
+        <a href="?tea={{topic.topicName}}" class="block py-1 hover:text-blue-600">{{topic.topicName}}</a>
+        {% endfor %}
+        {% endif %}
+        {% if is_authenticated %}
+        <a href="#" id="change-password" class="block py-1 hover:text-blue-600">Change Password</a>
+        <button onclick="logOut(event)" class="block py-1 hover:text-blue-600">Logout</button>
+        {% else %}
+        <a href="#" id="login-signup" class="block py-1 hover:text-blue-600">Log in or Sign up</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+<div class="text-center">
+  <div class="md:w-8/12 md:inline-block h-96 mx-auto p-2 md:p-4 bg-black relative rounded-md md:align-top">
+    {% if not request.GET.tea %}
+    <h2 class="text-2xl text-white font-bold mb-6">Choose Topic</h2>
+    <ul class="space-y-2 list-none">
+      {% for topic in topics %}
+      <li class="p-2 cursor-pointer font-semibold text-white hover:underline" data-topic="{{ topic.topicName }}">
+        {{ topic.topicName }}
+      </li>
+      {% endfor %}
+    </ul>
+
+    {% else %}
+    {% if not request.GET.sugar %}
+    <h2 class="text-2xl text-white font-bold mb-6">Select a Video</h2>
+    <ul class="space-y-2 list-none">
+      {% for video in topic_videos %}
+      <li class="p-2 cursor-pointer font-semibold text-white hover:underline" data-sugar="{{ video.videoName }}">
+        {{ video.videoName }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="text-center my-6">
+      {% if login_required %}
+      <div class="w-full h-full grid place-items-center bg-yellow-100 text-yellow-800 rounded shadow">
+        Log In or Sign Up to watch video
+      </div>
+      {% elif subscription_needed %}
+      <div class="w-full h-full grid place-items-center bg-red-100 text-red-800 rounded shadow p-4">
+        <span class="mb-4">No running subscription for this video</span>
+        <button id="subscribe-btn" onclick="openSubscriptionOverlay()"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition duration-150">
+          Subscribe to watch
+        </button>
+      </div>
+      {% elif video_link %}
+      <div class="w-full md:w-[640px] md:h-[360px] bg-black relative">
+        <iframe src="{{ video_link }}" width='640' height='360' 
+        frameborder='0' allowfullscreen referrerpolicy='no-referrer-when-downgrade' title='Video Player' 
+        class="w-full h-full rounded-lg shadow-lg sproutvideo-player"></iframe>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+  </div>
+
+  <div class="md:w-3/12 md:bg-yellow-500 md:inline-block bg-blue-800 text-white p-6 rounded mt-6 md:mt-0 md:align-top">
+    {% if request.GET.sugar %}
+    <h2 class="text-xl font-semibold mb-4">More videos in this topic</h2>
+    {% for video in topic_videos %}
+    <div
+      class="grid grid-cols-[auto,1fr] items-center mb-3 p-2 hover:bg-blue-700 rounded transition duration-150 cursor-pointer"
+      data-sugar="{{ video.videoName }}">
+      <img src="data:image/jpeg;base64,{{ video.thumbnail }}" class="w-20 h-12 mr-3 rounded">
+      <span class="font-medium">{{ video.videoName }}</span>
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+<div id="overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+  <!-- Clickable Translucent Background -->
+  <div id="overlay-bg" class="absolute inset-0"></div>
+
+  <div id="login-signup-modal" class="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <!-- Close Button -->
+    <button id="close-overlay"
+      class="absolute top-2 right-2 text-gray-600 hover:text-gray-900 text-2xl">&times;</button>
+
+    <!-- Login Form -->
+    <form id="login-form">
+      <input type="email" name="email" placeholder="Email" required
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
+      <input type="password" name="password" placeholder="Password" required
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
+      <button type="submit"
+        class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-150">Log In</button>
+      <div class="flex justify-between mt-4">
+        <a href="#" id="forgot-password" class="text-blue-600 hover:underline">Forgot Password?</a>
+        <a href="#" id="switch-to-signup" class="text-blue-600 hover:underline">Sign Up Instead</a>
+      </div>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signup-form" class="hidden">
+      <input type="text" name="name" placeholder="Name" required
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
+      <input type="email" name="email" placeholder="Email" required
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
+      <input type="password" name="password" placeholder="Password" required
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
+      <input type="password" name="confirm-password" placeholder="Confirm Password" required
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
+      <button type="submit"
+        class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-150">Sign Up</button>
+      <div class="text-right mt-4">
+        <a href="#" id="switch-to-login" class="text-blue-600 hover:underline">Log In Instead</a>
+      </div>
+    </form>
+
+    <!-- Verification Form -->
+    <form id="verification-form" class="hidden">
+      <p class="mb-4 text-gray-700">Check your email for a 6-digit verification code</p>
+      <input type="text" name="code" placeholder="Verification Code" required
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
+      <button type="submit"
+        class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-150">Verify</button>
+    </form>
+  </div>
+</div>
+
+<div id="subscription-overlay" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+  <div class="relative bg-white p-8 rounded-lg shadow-lg w-full max-w-lg"> 
+    
+    <h2 class="text-2xl font-bold mb-6">Your Subscriptions</h2>
+    
+    {% if user_subscriptions %}
+    <div class="mb-6">
+      <table class="w-full mb-4">
+        <thead>
+          <tr class="border-b">
+            <th class="text-left py-2">Topic Name</th>
+            <th class="text-left py-2">Time Left</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for subscription in user_subscriptions %}
+          <tr class="border-b">
+            <td class="py-2">{{ subscription.topicID.topicName }}</td>
+            <td class="py-2">
+              <span class="time-left" data-expiry="{{ subscription.expiry|date:'c' }}">
+                {{ subscription.expiry }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold mb-6">Add New Subscription</h2>
+    
+      <form id="subscription-form">
+        <!-- Topic Selection -->
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2">Select Topic</label>
+          <select id="topic-select" class="w-full p-2 border rounded" required>
+            <option value="">Choose a topic</option>
+            {% for topic in topics %}
+            <option value="{{ topic.topicName }}" 
+                    data-daily="{{ topic.dailyPrice }}"
+                    data-weekly="{{ topic.weeklyPrice }}"
+                    data-monthly="{{ topic.monthlyPrice }}">
+              {{ topic.topicName }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+  
+        <!-- Duration Input -->
+        <div class="mb-4 grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-gray-700 mb-2">Duration</label>
+            <div class="flex">
+              <input type="number" id="duration-amount" min="1" 
+                     class="w-1/2 p-2 border rounded-l" placeholder="Number" required>
+              <select id="duration-unit" class="w-1/2 p-2 border rounded-r" required>
+                <option value="daily">Days</option>
+                <option value="weekly">Weeks</option>
+                <option value="monthly">Months</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Price Display -->
+          <div>
+            <label class="block text-gray-700 mb-2">Total Price</label>
+            <div id="total-price" class="p-2 bg-gray-100 rounded font-bold text-lg">
+              $0.00
+            </div>
+          </div>
+        </div>
+  
+        <!-- Mobile Number -->
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2">Mobile Number</label>
+          <input type="tel" id="mobile-number" 
+                 class="w-full p-2 border rounded"
+                 placeholder="Enter your mobile number"
+                 pattern="[0-9]{10}"
+                 required>
+        </div>
+  
+        <button type="submit" 
+                class="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-150">
+          Submit
+        </button>
+      </form>
+    </div> 
+  </div>
+</div>
+
+<script src="{% static 'app.js' %}"></script>
+
+{% endblock %}
