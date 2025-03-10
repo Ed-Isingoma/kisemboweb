@@ -34,16 +34,6 @@ function getCSRFToken() {
   return '';
 }
 
-function processSubscription() {
-  // Add your subscription logic here
-  console.log('Processing subscription...');
-  document.getElementById('subscription-overlay').classList.add('hidden');
-} 
-
-function openSubscriptionOverlay() {
-  document.getElementById('subscription-overlay').classList.remove('hidden');
-}
-
 function updateTimeLeft() {
   document.querySelectorAll('.time-left').forEach(element => {
     const expiryDate = new Date(element.dataset.expiry);
@@ -60,13 +50,35 @@ function updateTimeLeft() {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    element.textContent = 
+    element.textContent =
       `${days}d ${hours}h ${minutes}m ${seconds}s left`;
   });
 }
 
 updateTimeLeft();
 setInterval(updateTimeLeft, 1000);
+
+function calculatePrice() {
+  const topicSelect = document.getElementById('topic-select');
+  const durationUnit = document.getElementById('duration-unit').value;
+  const durationAmount = parseFloat(document.getElementById('duration-amount').value) || 0;
+
+  if (!topicSelect.value) return;
+
+  const selectedOption = topicSelect.options[topicSelect.selectedIndex];
+  const unitPrice = parseFloat(selectedOption.dataset[durationUnit]);
+  const totalPrice = durationAmount * unitPrice;
+
+  document.getElementById('total-price').textContent =
+    `UGX ${totalPrice}`;
+};
+
+function openSubscriptionOverlay(){
+  document.querySelector('#subscription-overlay').classList.remove('hidden')
+  const form = document.getElementById('subscription-form');
+  form.reset();
+  document.getElementById('total-price').textContent = 'UGX 0';
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const accountDropdown = document.getElementById('account-dropdown');
@@ -136,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Login error:', error);
     }
-  }); 
+  });
 
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -202,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.search = params.toString();
     });
   });
- 
 
   document.getElementById('subscription-overlay')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('subscription-overlay')) {
@@ -210,37 +221,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const calculatePrice = () => {
-    const topicSelect = document.getElementById('topic-select');
-    const durationUnit = document.getElementById('duration-unit').value;
-    const durationAmount = parseFloat(document.getElementById('duration-amount').value) || 0;
-    
-    if (!topicSelect.value) return;
-    
-    const selectedOption = topicSelect.options[topicSelect.selectedIndex];
-    const unitPrice = parseFloat(selectedOption.dataset[durationUnit]);
-    const totalPrice = durationAmount * unitPrice;
-    
-    document.getElementById('total-price').textContent = 
-      `$${totalPrice.toFixed(2)}`;
-  };
 
-  // Add event listeners for price calculation
-  document.getElementById('topic-select').addEventListener('change', calculatePrice);
-  document.getElementById('duration-unit').addEventListener('change', calculatePrice);
-  document.getElementById('duration-amount').addEventListener('input', calculatePrice);
-
-  // Handle form submission
   document.getElementById('subscription-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
+
+    const topicSelect = document.getElementById('topic-select');
+    const durationUnit = document.getElementById('duration-unit');
+    const durationAmount = document.getElementById('duration-amount');
+    const mobileNumber = document.getElementById('mobile-number');
+    const totalPrice = document.getElementById('total-price');
+    const submitBtn = document.querySelector('#subscription-form button[type="submit"]');
+
+    const selectedTopic = topicSelect.options[topicSelect.selectedIndex];
+    const topicId = selectedTopic.dataset.id;
+    const userId = e.target.dataset.user;
+
+    if (!topicId) {
+      alert('Please select a topic');
+      return;
+    }
+
+    const durationValue = parseFloat(durationAmount.value);
+    if (isNaN(durationValue) || durationValue <= 0) {
+      alert('Please enter a valid duration amount');
+      return;
+    }
+
+    const mobileRegex = /^07\d{8}$/;
+    if (!mobileRegex.test(mobileNumber.value)) {
+      alert('Please enter a valid mobile number (07xxxxxxxx)');
+      return;
+    }
+
+    const priceText = totalPrice.textContent.replace('UGX ', '').replace(/,/g, '');
+    const priceValue = parseFloat(priceText);
+    if (isNaN(priceValue)) {
+        alert('Invalid price format');
+        return;
+    } 
+
     const subscriptionData = {
-      topic: document.getElementById('topic-select').value,
-      duration_unit: document.getElementById('duration-unit').value,
-      duration_amount: document.getElementById('duration-amount').value,
-      mobile_number: document.getElementById('mobile-number').value,
-      total_price: document.getElementById('total-price').textContent.replace('$', '')
+      topic_id: topicId, 
+      user_id: userId,
+      duration_unit: durationUnit.value,
+      duration_amount: durationValue, 
+      mobile_number: mobileNumber.value,
+      total_price: priceValue
     };
+
+    submitBtn.disabled = true;
 
     try {
       const response = await fetch('/subscribe/', {
@@ -254,15 +283,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const result = await response.json();
       if (result.success) {
-        alert('Subscription successful!');
         closeSubscriptionOverlay();
-        location.reload();
+        document.getElementById('notification-overlay').classList.remove('hidden')
       } else {
         alert(`Error: ${result.message}`);
       }
     } catch (error) {
       console.error('Subscription error:', error);
       alert('An error occurred during subscription');
+    } finally {
+      submitBtn.disabled = false;
     }
   });
 });

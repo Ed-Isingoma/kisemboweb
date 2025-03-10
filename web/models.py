@@ -45,6 +45,7 @@ class Subscription(models.Model):
     userID = models.ForeignKey(Account, on_delete=models.CASCADE)
     topicID = models.ForeignKey(Topic, on_delete=models.CASCADE)
     expiry = models.DateTimeField()
-
+    confirmed = models.BooleanField(default=False)
+    
     def __str__(self):
         return f"{self.userID} - {self.topicID}"

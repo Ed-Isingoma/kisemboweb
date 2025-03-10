@@ -7,6 +7,94 @@ from django.conf import settings
 import random
 import json
 from .models import Account, Session, Topic, TopicVideo, Subscription
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+import requests
+
+def subscribe(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user_id = data.get('user_id')
+
+            if not user_id:
+                return JsonResponse({'error': 'User ID required'}, status=400)
+            try:
+                user = Account.objects.get(id=user_id)
+            except Account.DoesNotExist:
+                return JsonResponse({'error': 'Invalid user'}, status=400)
+
+            subscription_data = {
+                'topic_id': data.get('topic_id'),
+                'duration_unit': data.get('duration_unit'),
+                'duration_amount': int(data.get('duration_amount')),
+                'mobile_number': data.get('mobile_number'),
+                'total_price': float(data.get('total_price'))
+            }
+
+            if not all(subscription_data.values()):
+                return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+            try:
+                topic = Topic.objects.get(id=subscription_data['topic_id'])
+            except Topic.DoesNotExist:
+                return JsonResponse({'error': 'Invalid topic'}, status=400)
+
+            now = timezone.now()
+            if subscription_data['duration_unit'] == 'daily':
+                expiry = now + timedelta(days=subscription_data['duration_amount'])
+            elif subscription_data['duration_unit'] == 'weekly':
+                expiry = now + timedelta(weeks=subscription_data['duration_amount'])
+            elif subscription_data['duration_unit'] == 'monthly':
+                naive_expiry = timezone.make_naive(now) + relativedelta(months=+subscription_data['duration_amount'])
+                expiry = timezone.make_aware(naive_expiry)
+
+            subscription = Subscription.objects.create(
+                userID=user,
+                topicID=topic,
+                expiry=expiry,
+                confirmed=False
+            )
+
+            tx_ref = str(subscription.id)
+            package = {
+                "tx_ref": tx_ref,
+                "amount": int(subscription_data['total_price']),
+                "currency": "UGX",
+                "email": user.email,
+                "phone_number": '+256' + subscription_data['mobile_number'][1:],
+                "redirect_url": "https://kisembopaymentstransit.vercel.app/"
+            }
+
+            headers = {
+                'Authorization': f'Bearer {settings.FLW_SECRET_KEY}',
+                'Content-Type': 'application/json'
+            }
+
+            print('and here we go to flwave:')
+            print(headers)
+            
+            response = requests.post(
+                'https://api.flutterwave.com/v3/charges?type=mobile_money_uganda',
+                headers=headers,
+                json=package
+            )
+
+            if response.status_code == 200:
+                flutterwave_response = response.json()
+                if flutterwave_response.get('status') == 'success':
+                    return JsonResponse({
+                        'redirect': flutterwave_response['meta']['authorization']['redirect']
+                    })
+                else:
+                    return JsonResponse({'error': flutterwave_response.get('message')}, status=400)
+            
+            return JsonResponse({'error': 'Payment gateway error'}, status=500)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 def generate_session_token():
     return str(uuid.uuid4())

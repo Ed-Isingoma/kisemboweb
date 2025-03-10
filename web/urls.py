@@ -10,4 +10,5 @@ urlpatterns = [
     path('change-password/', views.change_password_view, name='change_password'),
     path('reset-password/', views.reset_password_view, name='reset_password'),
     path("__reload__/", include("django_browser_reload.urls")),
+    path('subscribe/', views.subscribe, name="subscribe"),
 ]
