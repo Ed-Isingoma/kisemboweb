@@ -221,6 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  document.getElementById('notification-overlay')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('notification-overlay')) {
+      e.target.classList.add('hidden');
+    }
+  });
+
 
   document.getElementById('subscription-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -280,13 +286,15 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: JSON.stringify(subscriptionData)
       });
-
+      
       const result = await response.json();
-      if (result.success) {
-        closeSubscriptionOverlay();
+      
+      if (response.ok && result.redirect) {
+        window.open(result.redirect, '_blank');
+        document.getElementById('subscription-overlay').classList.add('hidden')
         document.getElementById('notification-overlay').classList.remove('hidden')
       } else {
-        alert(`Error: ${result.message}`);
+        alert(`Error: ${result.error}`);
       }
     } catch (error) {
       console.error('Subscription error:', error);

@@ -46,7 +46,7 @@ class TopicVideoAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('userID', 'topicID', 'expiry')
+    list_display = ('userID', 'topicID', 'expiry', 'confirmed')
     list_filter = ('expiry',)
     search_fields = ('userID__email', 'topicID__topicName')
     list_editable = ('expiry',)

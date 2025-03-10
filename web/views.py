@@ -9,6 +9,7 @@ import json
 from .models import Account, Session, Topic, TopicVideo, Subscription
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from django.shortcuts import get_object_or_404
 import requests
 
 def subscribe(request):
@@ -70,9 +71,6 @@ def subscribe(request):
                 'Authorization': f'Bearer {settings.FLW_SECRET_KEY}',
                 'Content-Type': 'application/json'
             }
-
-            print('and here we go to flwave:')
-            print(headers)
             
             response = requests.post(
                 'https://api.flutterwave.com/v3/charges?type=mobile_money_uganda',
@@ -88,10 +86,11 @@ def subscribe(request):
                     })
                 else:
                     return JsonResponse({'error': flutterwave_response.get('message')}, status=400)
-            
+
             return JsonResponse({'error': 'Payment gateway error'}, status=500)
 
         except Exception as e:
+            print(e)
             return JsonResponse({'error': str(e)}, status=500)
     
     return JsonResponse({'error': 'Invalid request method'}, status=405)
@@ -109,51 +108,59 @@ def send_verification_email(email, code):
         settings.EMAIL_HOST_USER,  # Uses the email from settings.py
         [email],
         fail_silently=False,
-    )
+    ) 
 
 def home_view(request):
-    session_id = request.COOKIES.get('sessionId')
-    user_id = request.COOKIES.get('userId')
-    
     context = {
         'topics': Topic.objects.all(),
         'is_authenticated': False,
-        'login_required': False,  # Ensure these keys exist in context
+        'user': None,
+        'user_subscriptions': None,
+        'login_required': False,
         'subscription_needed': False
     }
-    
+
+    session_id = request.COOKIES.get('sessionId')
+    user_id = request.COOKIES.get('userId')
+
     if session_id and user_id:
         try:
-            session = Session.objects.get(
-                sessionID=session_id, 
-                userID=user_id, 
+            session = Session.objects.select_related('userID').get(
+                sessionID=session_id,
+                userID=user_id,
                 expiry__gt=timezone.now()
             )
-            context['is_authenticated'] = True
-            context['user_subscriptions'] = Subscription.objects.filter(
-                userID=session.userID, 
-                expiry__gt=timezone.now()
-            )
+            user = session.userID
+            context.update({
+                'is_authenticated': True,
+                'user': {'id': user.id, 'name': user.name},
+                'user_subscriptions': Subscription.objects.filter(
+                    userID=user,
+                    expiry__gt=timezone.now(),
+                    confirmed=True
+                )
+            })
         except Session.DoesNotExist:
             pass
-    
+
     tea = request.GET.get('tea')
     sugar = request.GET.get('sugar')
-    
+
     if tea:
         try:
             topic = Topic.objects.get(topicName=tea)
             context['topic_videos'] = TopicVideo.objects.filter(topicID=topic)
             
             if sugar:
-                video = TopicVideo.objects.get(videoName=sugar)
+                video = TopicVideo.objects.get(videoName=sugar, topicID=topic)
                 
                 if context['is_authenticated']:
                     has_subscription = Subscription.objects.filter(
-                        userID_id=session.userID.pk, 
-                        topicID_id=topic.pk, 
-                        expiry__gt=timezone.now()
-                    ).exists() 
+                        userID_id=user.id, 
+                        topicID_id=topic.id, 
+                        expiry__gt=timezone.now(),
+                        confirmed=True
+                    ).exists()
 
                     if has_subscription:
                         context['video_link'] = video.videoLink
@@ -161,8 +168,9 @@ def home_view(request):
                         context['subscription_needed'] = True
                 else:
                     context['login_required'] = True
+                    
         except (Topic.DoesNotExist, TopicVideo.DoesNotExist):
-            pass  # Avoids errors if topic or video doesn't exist
+            pass # Handle invalid parameters quietly
 
     return render(request, 'home.html', context)
 
@@ -193,7 +201,6 @@ def login_view(request):
 
 def logout_view(request):
 	session_id = request.COOKIES.get('sessionId')
-	print('logging out')
 	if session_id:
 		Session.objects.filter(sessionID=session_id).delete()
 		response = JsonResponse({'success': True})

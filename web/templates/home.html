@@ -25,6 +25,7 @@
         {% endif %}
         {% if is_authenticated %}
         <a href="#" id="change-password" class="block py-1 hover:text-blue-600">Change Password</a>
+        <button onclick="openSubscriptionOverlay()" class="block py-1 hover:text-blue-600">Subscriptions</button>
         <button onclick="logOut(event)" class="block py-1 hover:text-blue-600">Logout</button>
         {% else %}
         <a href="#" id="login-signup" class="block py-1 hover:text-blue-600">Log in or Sign up</a>
