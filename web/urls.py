@@ -10,10 +10,14 @@ urlpatterns = [
     path('logout/', views.logout_view, name="logout"),
     path('verify-account/', views.verify_account_view, name='verify_account'),
     path('reset-password/', views.reset_password_view, name='reset_password'),
-    path("__reload__/", include("django_browser_reload.urls")),
+    # path("__reload__/", include("django_browser_reload.urls")),
     path('subscribe/', views.subscribe, name="subscribe"),
     path('afterbill/', views.afterbill, name='afterbill'),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
+if settings.DEBUG:
+    urlpatterns += [
+        path("__reload__/", include("django_browser_reload.urls")),
+    ]

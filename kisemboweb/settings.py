@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-o-!nknvrvdcsej^uj-j4xdd7poo$g0)g8o+vy0$_ia^36k2x-c'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "kisemboweb.onrender.com"]
 CSRF_TRUSTED_ORIGINS = ["https://kisemboweb.onrender.com"]
@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'tailwind',
     'theme',
-    'django_browser_reload'
+    # 'django_browser_reload'
   ] 
 
 TAILWIND_APP_NAME = 'theme' 
@@ -69,8 +69,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "django_browser_reload.middleware.BrowserReloadMiddleware",
+    # "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
+
+if DEBUG:
+    INSTALLED_APPS += ['django_browser_reload']
+    MIDDLEWARE += ['django_browser_reload.middleware.BrowserReloadMiddleware']
 
 ROOT_URLCONF = 'kisemboweb.urls'
 

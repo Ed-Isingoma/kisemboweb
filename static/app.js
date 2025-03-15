@@ -61,12 +61,12 @@ function calculatePrice() {
     `UGX ${totalPrice}`;
 };
 
-function openSubscriptionOverlay(){
+function openSubscriptionOverlay() {
   document.querySelector('#subscription-overlay').classList.remove('hidden')
   if (!document.getElementById('dropdown-menu').classList.contains('hidden')) {
     document.getElementById('dropdown-menu').classList.add('hidden');
   }
-  
+
   const form = document.getElementById('subscription-form');
   form.reset();
   document.getElementById('total-price').textContent = 'UGX 0';
@@ -91,13 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!dropdownMenu.classList.contains('hidden')) {
         dropdownMenu.classList.add('hidden');
       }
-      
+
       overlay.classList.remove('hidden');
       loginForm.classList.remove('hidden');
       signupForm.classList.add('hidden');
       verificationForm.classList.add('hidden');
     });
-  });  
+  });
 
   closeOverlay?.addEventListener('click', () => {
     overlay.classList.add('hidden');
@@ -120,11 +120,27 @@ document.addEventListener('DOMContentLoaded', () => {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(loginForm);
-
     const formObject = {};
+
     formData.forEach((value, key) => {
       formObject[key] = value;
     });
+
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    const originalHTML = submitButton.innerHTML;
+
+    submitButton.innerHTML = `
+      <svg class="animate-spin mx-auto text-white" 
+       style="height: 1.25rem; width: 1.25rem" 
+       xmlns="http://www.w3.org/2000/svg" 
+       fill="none" 
+       viewBox="0 0 24 24"
+       preserveAspectRatio="xMidYMid meet">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l4-4-4-4v4a8 8 0 00-8 8h4z"></path>
+      </svg> `
+    submitButton.disabled = true;
+    submitButton.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
       const response = await fetch('/login/', {
@@ -133,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCSRFToken(), // Send CSRF token in headers
         },
-        body: JSON.stringify(formObject)
+        body: JSON.stringify(formObject),
       });
 
       const data = await response.json();
@@ -145,16 +161,37 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Login error:', error);
+    } finally {
+      submitButton.innerHTML = originalHTML;
+      submitButton.disabled = false;
+      submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
     }
   });
 
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(signupForm);
+
     if (formData.get('password') !== formData.get('confirm-password')) {
       alert('Passwords do not match');
       return;
     }
+
+    const submitButton = signupForm.querySelector('button[type="submit"]');
+    const originalHTML = submitButton.innerHTML;
+    submitButton.innerHTML = `
+      <svg class="animate-spin mx-auto text-white" 
+       style="height: 1.25rem; width: 1.25rem" 
+       xmlns="http://www.w3.org/2000/svg" 
+       fill="none" 
+       viewBox="0 0 24 24"
+       preserveAspectRatio="xMidYMid meet">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l4-4-4-4v4a8 8 0 00-8 8h4z"></path>
+    </svg> `;
+    submitButton.disabled = true;
+    submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+
     try {
       const response = await fetch('/signup/', {
         method: 'POST',
@@ -163,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: formData
       });
+
       const data = await response.json();
       if (data.success) {
         const email = signupForm.querySelector('input[name="email"]').value;
@@ -174,12 +212,33 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Signup error:', error);
+    } finally {
+      submitButton.innerHTML = originalHTML;
+      submitButton.disabled = false;
+      submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
     }
   });
 
   verificationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(verificationForm);
+
+    const submitButton = verificationForm.querySelector('button[type="submit"]');
+    const originalHTML = submitButton.innerHTML;
+
+    submitButton.innerHTML = `
+      <svg class="animate-spin mx-auto text-white" 
+       style="height: 1.25rem; width: 1.25rem" 
+       xmlns="http://www.w3.org/2000/svg" 
+       fill="none" 
+       viewBox="0 0 24 24"
+       preserveAspectRatio="xMidYMid meet">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l4-4-4-4v4a8 8 0 00-8 8h4z"></path>
+    </svg> `;
+    submitButton.disabled = true;
+    submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+
     try {
       const response = await fetch('/verify-account/', {
         method: 'POST',
@@ -188,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: formData
       });
+
       const data = await response.json();
       if (data.success) {
         overlay.classList.add('hidden');
@@ -197,6 +257,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Verification error:', error);
+    } finally {
+      submitButton.innerHTML = originalHTML;
+      submitButton.disabled = false;
+      submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
     }
   });
 
@@ -229,7 +293,6 @@ document.addEventListener('DOMContentLoaded', () => {
       e.target.classList.add('hidden');
     }
   });
-
 
   document.getElementById('subscription-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -265,20 +328,32 @@ document.addEventListener('DOMContentLoaded', () => {
     const priceText = totalPrice.textContent.replace('UGX ', '').replace(/,/g, '');
     const priceValue = parseFloat(priceText);
     if (isNaN(priceValue)) {
-        alert('Invalid price format');
-        return;
-    } 
+      alert('Invalid price format');
+      return;
+    }
 
     const subscriptionData = {
-      topic_id: topicId, 
+      topic_id: topicId,
       user_id: userId,
       duration_unit: durationUnit.value,
-      duration_amount: durationValue, 
+      duration_amount: durationValue,
       mobile_number: mobileNumber.value,
       total_price: priceValue
     };
 
     submitBtn.disabled = true;
+    const originalHTML = submitBtn.innerHTML;
+    submitBtn.innerHTML = `
+        <svg class="animate-spin mx-auto text-white" 
+        style="height: 1.25rem; width: 1.25rem" 
+        xmlns="http://www.w3.org/2000/svg" 
+        fill="none" 
+        viewBox="0 0 24 24"
+        preserveAspectRatio="xMidYMid meet">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l4-4-4-4v4a8 8 0 00-8 8h4z"></path>
+    </svg> `;
+    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
     try {
       const response = await fetch('/subscribe/', {
@@ -289,9 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         body: JSON.stringify(subscriptionData)
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok && result.redirect) {
         window.open(result.redirect, '_blank');
         document.getElementById('subscription-overlay').classList.add('hidden')
@@ -304,6 +379,8 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('An error occurred during subscription');
     } finally {
       submitBtn.disabled = false;
+      submitBtn.innerHTML = originalHTML;
+      submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
     }
   });
 });
