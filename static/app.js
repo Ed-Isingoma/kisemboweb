@@ -1,4 +1,3 @@
-
 async function logOut(e) {
   e.preventDefault();
   try {
@@ -7,21 +6,10 @@ async function logOut(e) {
       credentials: "same-origin",
       headers: { "X-CSRFToken": getCSRFToken() }
     });
-
-    if (!response.ok) throw new Error("Logout request failed");
-
-    const result = await response.json();
-
-    if (result.success) {
-      document.cookie = "sessionId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      document.cookie = "userId=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.location.reload(true);
-    } else {
-      alert("Logout failed.");
-    }
+    window.location.reload(true); // Force full page refresh
   } catch (error) {
     console.error("Logout Error:", error);
-    alert("An error occurred during logout.");
+    alert("Logout failed");
   }
 }
 
@@ -75,6 +63,10 @@ function calculatePrice() {
 
 function openSubscriptionOverlay(){
   document.querySelector('#subscription-overlay').classList.remove('hidden')
+  if (!document.getElementById('dropdown-menu').classList.contains('hidden')) {
+    document.getElementById('dropdown-menu').classList.add('hidden');
+  }
+  
   const form = document.getElementById('subscription-form');
   form.reset();
   document.getElementById('total-price').textContent = 'UGX 0';
@@ -94,12 +86,18 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdownMenu.classList.toggle('hidden');
   });
 
-  document.getElementById('login-signup')?.addEventListener('click', () => {
-    overlay.classList.remove('hidden');
-    loginForm.classList.remove('hidden');
-    signupForm.classList.add('hidden');
-    verificationForm.classList.add('hidden');
-  });
+  document.querySelectorAll('[data-role="login-signup"]').forEach(button => {
+    button.addEventListener('click', () => {
+      if (!dropdownMenu.classList.contains('hidden')) {
+        dropdownMenu.classList.add('hidden');
+      }
+      
+      overlay.classList.remove('hidden');
+      loginForm.classList.remove('hidden');
+      signupForm.classList.add('hidden');
+      verificationForm.classList.add('hidden');
+    });
+  });  
 
   closeOverlay?.addEventListener('click', () => {
     overlay.classList.add('hidden');
@@ -167,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await response.json();
       if (data.success) {
+        const email = signupForm.querySelector('input[name="email"]').value;
+        verificationForm.querySelector('input[name="email"]').value = email;
         signupForm.classList.add('hidden');
         verificationForm.classList.remove('hidden');
       } else {
@@ -183,6 +183,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch('/verify-account/', {
         method: 'POST',
+        headers: {
+          'X-CSRFToken': getCSRFToken()
+        },
         body: formData
       });
       const data = await response.json();

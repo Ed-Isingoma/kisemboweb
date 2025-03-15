@@ -5,12 +5,15 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 import random
+import os
 import json
 from .models import Account, Session, Topic, TopicVideo, Subscription
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from django.shortcuts import get_object_or_404
 import requests
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 def subscribe(request):
     if request.method == 'POST':
@@ -103,8 +106,8 @@ def generate_verification_code():
 
 def send_verification_email(email, code):
     send_mail(
-        'Verification Code',
-        f'Your verification code is: {code}',
+        'Kisembo Academy Verification Code',
+        f'Thank you for signing up on Kisembo Academy. Your verification code is: {code}',
         settings.EMAIL_HOST_USER,  # Uses the email from settings.py
         [email],
         fail_silently=False,
@@ -200,14 +203,22 @@ def login_view(request):
             return JsonResponse({'success': False, 'message': 'Invalid credentials or request format'})
 
 def logout_view(request):
-	session_id = request.COOKIES.get('sessionId')
-	if session_id:
-		Session.objects.filter(sessionID=session_id).delete()
-		response = JsonResponse({'success': True})
-		response.delete_cookie('sessionId')
-		response.delete_cookie('userId')
-		return response
-	return JsonResponse({'success': False, 'message': 'No active session found'})
+    response = JsonResponse({'success': True})
+    
+    session_id = request.COOKIES.get('sessionId')
+    if session_id:
+        Session.objects.filter(sessionID=session_id).delete()
+    
+    cookie_settings = {
+        'path': '/',
+        'samesite': 'Lax',
+        'httponly': True
+    }
+    
+    response.delete_cookie('sessionId', **cookie_settings)
+    response.delete_cookie('userId', **cookie_settings)
+    
+    return response
 
 def signup_view(request):
     if request.method == 'POST':
@@ -246,24 +257,35 @@ def verify_account_view(request):
             account.is_confirmed = True
             account.code = None
             account.save()
-            return JsonResponse({'success': True})
+
+            session_id = generate_session_token()
+            Session.objects.create(
+                sessionID=session_id,
+                userID=account,
+                expiry=timezone.now() + timezone.timedelta(days=1)
+            )
+
+            response = JsonResponse({'success': True})
+            response.set_cookie('sessionId', session_id, httponly=True)
+            response.set_cookie('userId', account.id, httponly=True)
+            return response
         except Account.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Invalid verification code'})
 
-def change_password_view(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
+# def change_password_view(request):
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
         
-        try:
-            account = Account.objects.get(email=email)
-            verification_code = generate_verification_code()
-            account.code = verification_code
-            account.save()
+#         try:
+#             account = Account.objects.get(email=email)
+#             verification_code = generate_verification_code()
+#             account.code = verification_code
+#             account.save()
             
-            send_verification_email(email, verification_code)
-            return JsonResponse({'success': True})
-        except Account.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Email not found'})
+#             send_verification_email(email, verification_code)
+#             return JsonResponse({'success': True})
+#         except Account.DoesNotExist:
+#             return JsonResponse({'success': False, 'message': 'Email not found'})
 
 def reset_password_view(request):
     if request.method == 'POST':
@@ -279,3 +301,34 @@ def reset_password_view(request):
             return JsonResponse({'success': True})
         except Account.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Invalid verification code'})
+
+
+@csrf_exempt
+@require_POST  # Allow only POST requests
+def afterbill(request):
+    try:
+        verif_hash = request.headers.get("verif-hash")
+        secret_hash = settings.FLW_SECRET_HASH
+
+        if verif_hash != secret_hash:
+            return JsonResponse({"error": "Hash values do not match"}, status=403)
+
+        data = json.loads(request.body).get("data")
+        if data.get("status") == "successful":
+            tx_ref = data.get("tx_ref")
+            subscription = Subscription.objects.get(id=tx_ref)
+            subscription.confirmed = True
+            subscription.save()
+
+            return JsonResponse({"message": "Subscription confirmed", "tx_ref": tx_ref}, status=200)
+
+        return JsonResponse({"message": "Transaction not successful"}, status=400)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format"}, status=400)
+    except Subscription.DoesNotExist:
+        return JsonResponse({"error": "Subscription not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
