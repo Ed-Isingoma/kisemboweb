@@ -5,7 +5,7 @@ from .models import Account, Session, Topic, TopicVideo, Subscription
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'is_confirmed', 'code')
+    list_display = ('name', 'email', 'is_confirmed')
     list_filter = ('is_confirmed',)
     search_fields = ('email', 'name')
     fieldsets = (

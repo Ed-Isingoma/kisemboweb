@@ -1,0 +1,21 @@
+# Core Django
+Django==5.1.6
+asgiref==3.8.1
+sqlparse==0.5.3
+
+# Tailwind
+django-tailwind==3.8.0
+django-browser-reload==1.18.0
+
+# CORS
+django-cors-headers==4.7.0
+
+# Essential utilities
+python-dotenv==1.0.1
+certifi==2025.1.31
+charset-normalizer==3.4.1
+python-slugify==8.0.4
+
+# Security
+requests==2.32.3
+urllib3==2.3.0
