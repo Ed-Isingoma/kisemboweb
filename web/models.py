@@ -25,9 +25,8 @@ class Session(models.Model):
 
 class Topic(models.Model):
     topicName = models.CharField(max_length=100)
-    dailyPrice = models.DecimalField(max_digits=10, decimal_places=2)
-    weeklyPrice = models.DecimalField(max_digits=10, decimal_places=2)
-    monthlyPrice = models.DecimalField(max_digits=10, decimal_places=2)
+    quarterlyPrice = models.IntegerField()
+    monthlyPrice = models.IntegerField()
 
     def __str__(self):
         return self.topicName

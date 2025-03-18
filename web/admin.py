@@ -28,8 +28,8 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
-    list_display = ('topicName', 'dailyPrice', 'weeklyPrice', 'monthlyPrice')
-    list_filter = ('dailyPrice', 'weeklyPrice', 'monthlyPrice')
+    list_display = ('topicName', 'monthlyPrice', 'quarterlyPrice')
+    list_filter = ('monthlyPrice', 'quarterlyPrice')
     search_fields = ('topicName',)
 
 @admin.register(TopicVideo)

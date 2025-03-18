@@ -45,13 +45,13 @@ def subscribe(request):
                 return JsonResponse({'error': 'Invalid topic'}, status=400)
 
             now = timezone.now()
-            if subscription_data['duration_unit'] == 'daily':
-                expiry = now + timedelta(days=subscription_data['duration_amount'])
-            elif subscription_data['duration_unit'] == 'weekly':
-                expiry = now + timedelta(weeks=subscription_data['duration_amount'])
-            elif subscription_data['duration_unit'] == 'monthly':
+            if subscription_data['duration_unit'] == 'monthly':
                 naive_expiry = timezone.make_naive(now) + relativedelta(months=+subscription_data['duration_amount'])
                 expiry = timezone.make_aware(naive_expiry)
+            elif subscription_data['duration_unit'] == 'quarterly':
+                naive_expiry = timezone.make_naive(now) + relativedelta(months=+(subscription_data['duration_amount'] * 3))
+                expiry = timezone.make_aware(naive_expiry)
+
 
             subscription = Subscription.objects.create(
                 userID=user,
@@ -151,12 +151,11 @@ def home_view(request):
 
     if tea:
         try:
-            topic = Topic.objects.get(topicName=tea)
+            topic = Topic.objects.get(id=tea)
             context['topic_videos'] = TopicVideo.objects.filter(topicID=topic)
             
             if sugar:
-                video = TopicVideo.objects.get(videoName=sugar, topicID=topic)
-                
+                video = TopicVideo.objects.get(id=sugar, topicID=topic)            
                 if context['is_authenticated']:
                     has_subscription = Subscription.objects.filter(
                         userID_id=user.id, 
@@ -173,7 +172,8 @@ def home_view(request):
                     context['login_required'] = True
                     
         except (Topic.DoesNotExist, TopicVideo.DoesNotExist):
-            pass # Handle invalid parameters quietly
+            pass  # Handle invalid parameters quietly
+
 
     return render(request, 'home.html', context)
 

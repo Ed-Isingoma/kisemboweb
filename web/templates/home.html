@@ -23,7 +23,7 @@
     {% if topics %}
     <div class="border-b border-gray-300 pb-2 mb-2">
       {% for topic in topics %}
-      <a href="?tea={{ topic.topicName }}"
+      <a href="?tea={{ topic.id }}"
         class="block w-full px-3 py-2 rounded-md hover:bg-gray-100 hover:text-blue-600 transition">
         {{ topic.topicName }}
       </a>
@@ -57,7 +57,7 @@
   <h2 class="text-2xl text-white font-bold mb-6">Choose Topic</h2>
   <ul class="space-y-2 list-none">
     {% for topic in topics %}
-    <li class="p-2 cursor-pointer font-semibold text-white hover:underline" data-topic="{{ topic.topicName }}">
+    <li class="p-2 cursor-pointer font-semibold text-white hover:underline" data-topic="{{ topic.id }}">
       {{ topic.topicName }}
     </li>
     {% endfor %}
@@ -70,7 +70,7 @@
     {% for video in topic_videos %}
     <li
       class="p-2 cursor-pointer font-semibold text-white hover:underline hover:bg-gray-700 rounded-md transition duration-300"
-      data-sugar="{{ video.videoName }}">
+      data-sugar="{{ video.id }}">
       {{ video.videoName }}
     </li>
     {% endfor %}
@@ -105,7 +105,7 @@
   {% for video in topic_videos %}
   <div
     class="grid text-left grid-cols-[auto,1fr] items-center mb-3 p-2 hover:bg-blue-700 rounded transition duration-150 cursor-pointer"
-    data-sugar="{{ video.videoName }}">
+    data-sugar="{{ video.id }}">
     <img src="data:image/jpeg;base64,{{ video.thumbnail }}" class="w-20 h-12 mr-2 rounded">
     <span class="font-medium">{{ video.videoName }}</span>
   </div>
@@ -202,8 +202,8 @@
           <select id="topic-select" onchange="calculatePrice()" class="w-full p-2 border rounded" required>
             <option value="">Choose a Category</option>
             {% for topic in topics %}
-            <option value="{{ topic.topicName }}" data-id="{{ topic.id }}" data-daily="{{ topic.dailyPrice }}"
-              data-weekly="{{ topic.weeklyPrice }}" data-monthly="{{ topic.monthlyPrice }}">
+            <option value="{{ topic.topicName }}" data-id="{{ topic.id }}" 
+              data-monthly="{{ topic.monthlyPrice }}" data-quarterly="{{ topic.quarterlyPrice }}">
               {{ topic.topicName }}
             </option>
             {% endfor %}
@@ -217,9 +217,8 @@
               <input type="number" id="duration-amount" onchange="calculatePrice()" min="1" value="1" step="1"
                 class="w-1/2 p-2 border rounded-l" required>
               <select id="duration-unit" onchange="calculatePrice()" class="w-1/2 p-2 border rounded-r" required>
-                <option value="daily">Days</option>
-                <option value="weekly">Weeks</option>
                 <option value="monthly">Months</option>
+                <option value="quarterly">Quarters (3-month periods)</option>
               </select>
             </div>
           </div>
