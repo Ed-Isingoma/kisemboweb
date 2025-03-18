@@ -44,13 +44,19 @@ def subscribe(request):
             except Topic.DoesNotExist:
                 return JsonResponse({'error': 'Invalid topic'}, status=400)
 
+            # now = timezone.now()
+            # if subscription_data['duration_unit'] == 'monthly':
+            #     naive_expiry = timezone.make_naive(now) + relativedelta(months=+subscription_data['duration_amount'])
+            #     expiry = timezone.make_aware(naive_expiry)
+            # elif subscription_data['duration_unit'] == 'quarterly':
+            #     naive_expiry = timezone.make_naive(now) + relativedelta(months=+(subscription_data['duration_amount'] * 3))
+            #     expiry = timezone.make_aware(naive_expiry)
+
             now = timezone.now()
             if subscription_data['duration_unit'] == 'monthly':
-                naive_expiry = timezone.make_naive(now) + relativedelta(months=+subscription_data['duration_amount'])
-                expiry = timezone.make_aware(naive_expiry)
+                expiry = now + relativedelta(months=subscription_data['duration_amount'])
             elif subscription_data['duration_unit'] == 'quarterly':
-                naive_expiry = timezone.make_naive(now) + relativedelta(months=+(subscription_data['duration_amount'] * 3))
-                expiry = timezone.make_aware(naive_expiry)
+                expiry = now + relativedelta(months=subscription_data['duration_amount'] * 3)
 
 
             subscription = Subscription.objects.create(
@@ -263,6 +269,13 @@ def verify_account_view(request):
                 sessionID=session_id,
                 userID=account,
                 expiry=timezone.now() + timezone.timedelta(days=1)
+            )
+
+            Subscription.objects.create(
+                userID=account,
+                topicID=Topic.objects.get(id=1),
+                expiry=timezone.now() + relativedelta(days=30),
+                confirmed=True
             )
 
             response = JsonResponse({'success': True})
