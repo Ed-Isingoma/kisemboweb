@@ -15,5 +15,10 @@
 
   {% endblock %}
 
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    fetch('/csrf/', { credentials: 'include' });
+  });
+  </script>
 </body>
 </html>
