@@ -11,14 +11,10 @@
   {% tailwind_css %}
 </head>
 <body class="h-screen text-center">
+  {% csrf_token %}
   {% block content %}
 
   {% endblock %}
 
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    fetch('/csrf/', { credentials: 'include' });
-  });
-  </script>
 </body>
 </html>

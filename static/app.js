@@ -150,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
           'X-CSRFToken': getCSRFToken(), // Send CSRF token in headers
         },
         body: JSON.stringify(formObject),
-        credentials: 'include',
       });
 
       const data = await response.json();
@@ -200,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
           'X-CSRFToken': getCSRFToken()
         },
         body: formData,
-        credentials: 'include',
       });
 
       const data = await response.json();
@@ -248,7 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
           'X-CSRFToken': getCSRFToken()
         },
         body: formData,
-        credentials: 'include'
       });
 
       const data = await response.json();
@@ -366,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
           'X-CSRFToken': getCSRFToken()
         },
         body: JSON.stringify(subscriptionData),
-        credentials: 'include'
       });
 
       const result = await response.json();
