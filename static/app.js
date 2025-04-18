@@ -22,6 +22,26 @@ function getCSRFToken() {
   return '';
 }
 
+function selectCard(clickedCard) {
+  const cardsContainer = clickedCard.parentElement;
+  const oldCards = Array.from(cardsContainer.children);
+
+  const newCards = oldCards.map(oldCard => {
+    const isSelected = oldCard === clickedCard;
+    const newCard = document.createElement('div');
+
+    const baseClasses = Array.from(oldCard.classList)
+      .filter(c => c !== 'bg-blue-300')
+      .join(' ');
+    newCard.className = baseClasses + (isSelected ? ' bg-blue-300' : '');
+    newCard.innerHTML = oldCard.innerHTML;
+    newCard.onclick = () => selectCard(newCard);
+    return newCard;
+  });
+
+  cardsContainer.replaceChildren(...newCards);
+}
+
 function updateTimeLeft() {
   document.querySelectorAll('.time-left').forEach(element => {
     const expiryDate = new Date(element.dataset.expiry);
@@ -46,21 +66,6 @@ function updateTimeLeft() {
 updateTimeLeft();
 setInterval(updateTimeLeft, 1000);
 
-function calculatePrice() {
-  const topicSelect = document.getElementById('topic-select');
-  const durationUnit = document.getElementById('duration-unit').value;
-  const durationAmount = parseFloat(document.getElementById('duration-amount').value) || 0;
-
-  if (!topicSelect.value) return;
-
-  const selectedOption = topicSelect.options[topicSelect.selectedIndex];
-  const unitPrice = parseFloat(selectedOption.dataset[durationUnit]);
-  const totalPrice = durationAmount * unitPrice;
-
-  document.getElementById('total-price').textContent =
-    `UGX ${totalPrice}`;
-};
-
 function openSubscriptionOverlay() {
   document.querySelector('#subscription-overlay').classList.remove('hidden')
   if (!document.getElementById('dropdown-menu').classList.contains('hidden')) {
@@ -69,7 +74,6 @@ function openSubscriptionOverlay() {
 
   const form = document.getElementById('subscription-form');
   form.reset();
-  document.getElementById('total-price').textContent = 'UGX 0';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -298,24 +302,23 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
 
     const topicSelect = document.getElementById('topic-select');
-    const durationUnit = document.getElementById('duration-unit');
-    const durationAmount = document.getElementById('duration-amount');
     const mobileNumber = document.getElementById('mobile-number');
-    const totalPrice = document.getElementById('total-price');
     const submitBtn = document.querySelector('#subscription-form button[type="submit"]');
+    const selectedDurCard = document.querySelector('.duration-card.bg-blue-300');
 
     const selectedTopic = topicSelect.options[topicSelect.selectedIndex];
     const topicId = selectedTopic.dataset.id;
     const userId = e.target.dataset.user;
 
-    if (!topicId) {
-      alert('Please select a topic');
+    if (!selectedDurCard) {
+      alert('Please select a duration');
       return;
     }
 
-    const durationValue = parseFloat(durationAmount.value);
-    if (isNaN(durationValue) || durationValue <= 0) {
-      alert('Please enter a valid duration amount');
+    const selectedDurParent = selectedDurCard.parentElement;
+
+    if (!topicId) {
+      alert('Please select a topic');
       return;
     }
 
@@ -325,20 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const priceText = totalPrice.textContent.replace('UGX ', '').replace(/,/g, '');
-    const priceValue = parseFloat(priceText);
-    if (isNaN(priceValue)) {
-      alert('Invalid price format');
-      return;
-    }
-
     const subscriptionData = {
       topic_id: topicId,
       user_id: userId,
-      duration_unit: durationUnit.value,
-      duration_amount: durationValue,
+      duration_card: Array.from(selectedDurParent.children).indexOf(selectedDurCard) + 1,
       mobile_number: mobileNumber.value,
-      total_price: priceValue
     };
 
     submitBtn.disabled = true;
@@ -380,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalHTML;
-      submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+      submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
   });
 });

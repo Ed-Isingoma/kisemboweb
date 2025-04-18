@@ -29,8 +29,8 @@ SECRET_KEY = 'django-insecure-o-!nknvrvdcsej^uj-j4xdd7poo$g0)g8o+vy0$_ia^36k2x-c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "kisemboweb.onrender.com"]
-CSRF_TRUSTED_ORIGINS = ["https://kisemboweb.onrender.com"]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", "kisemboweb.onrender.com", "kisemboacademy.com"]
+CSRF_TRUSTED_ORIGINS = ["https://kisemboweb.onrender.com", "https://kisemboacademy.com"]
 
 # Application definition
 
@@ -50,16 +50,21 @@ INSTALLED_APPS = [
 
 TAILWIND_APP_NAME = 'theme' 
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://localhost:5500",
-    "http://localhost:80",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:80",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:5500"
-]
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:8000",
+        "http://localhost:5500",
+        "http://localhost:80",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:80",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:5500"
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://kisemboacademy.com"
+    ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

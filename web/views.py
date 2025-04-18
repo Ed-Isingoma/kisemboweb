@@ -30,10 +30,8 @@ def subscribe(request):
 
             subscription_data = {
                 'topic_id': data.get('topic_id'),
-                'duration_unit': data.get('duration_unit'),
-                'duration_amount': int(data.get('duration_amount')),
+                'duration_card': data.get('duration_card'),
                 'mobile_number': data.get('mobile_number'),
-                'total_price': float(data.get('total_price'))
             }
 
             if not all(subscription_data.values()):
@@ -52,12 +50,15 @@ def subscribe(request):
             #     naive_expiry = timezone.make_naive(now) + relativedelta(months=+(subscription_data['duration_amount'] * 3))
             #     expiry = timezone.make_aware(naive_expiry)
 
-            now = timezone.now()
-            if subscription_data['duration_unit'] == 'monthly':
-                expiry = now + relativedelta(months=subscription_data['duration_amount'])
-            elif subscription_data['duration_unit'] == 'quarterly':
-                expiry = now + relativedelta(months=subscription_data['duration_amount'] * 3)
+            # now = timezone.now()
+            # if subscription_data['duration_unit'] == 'monthly':
+            #     expiry = now + relativedelta(months=subscription_data['duration_amount'])
+            # elif subscription_data['duration_unit'] == 'quarterly':
+            #     expiry = now + relativedelta(months=subscription_data['duration_amount'] * 3)
 
+            now = timezone.now()
+            subscription_data['total_price'] = topic.monthlyPrice if subscription_data['duration_card'] == 1 else topic.quarterlyPrice
+            expiry = now + relativedelta(months=1 if subscription_data['duration_card'] == 1 else 3)
 
             subscription = Subscription.objects.create(
                 userID=user,
@@ -73,9 +74,9 @@ def subscribe(request):
                 "currency": "UGX",
                 "email": user.email,
                 "phone_number": '+256' + subscription_data['mobile_number'][1:],
-                "redirect_url": "https://kisembopaymentstransit.vercel.app/"
+                "redirect_url": "https://www.kisemboacademy.com"
             }
-
+            
             headers = {
                 'Authorization': f'Bearer {settings.FLW_SECRET_KEY}',
                 'Content-Type': 'application/json'
