@@ -1,0 +1,70 @@
+{% load static %}
+
+{% block showvideo %}
+
+<div class="bg-gray-50 border-b border-gray-200 p-2 md:px-6">
+  <nav aria-label="Breadcrumb">
+    <p class="max-w-[1096px] text-left mx-auto text-sm text-gray-600 whitespace-normal break-words">
+      Home
+      <svg class="inline w-4 h-4 mx-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+      {{ location_topic }}
+      <svg class="inline w-4 h-4 mx-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+      {{ location_video }}
+    </p>
+  </nav>
+</div>
+
+<div class="md:w-8/12 md:inline-block md:mt-[10px] md:overflow-scroll aspect-[64/36]
+ text-center p-2 md:p-4 bg-gray-500 relative md:rounded-md"> 
+  {% if not request.GET.sugar %}
+  <h2 class="text-2xl text-white font-bold mb-6 static">Select a Video</h2>
+  <ul class="space-y-2 list-none pl-4">
+    {% for video in topic_videos %}
+    <li
+      class="p-2 cursor-pointer font-semibold text-white hover:underline hover:bg-gray-700 rounded-md transition duration-300"
+      data-sugar="{{ video.id }}">
+      {{ video.videoName }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  {% if login_required %}
+  <div class="w-full h-full bg-yellow-100 text-yellow-800 text-xl rounded shadow flex items-center justify-center">
+    <a href="#" data-role="login-signup" class="hover:text-blue-600">Log in or Sign Up</a>&nbsp;to watch video
+  </div>
+  {% elif subscription_needed %}
+  <div class="w-full h-full bg-red-100 text-red-800 rounded shadow p-4 flex flex-col items-center justify-center">
+    <p class="mb-4 text-lg md:text-xl">No running subscription for this video</p>
+    <button id="subscribe-btn" onclick="openSubscriptionOverlay()"
+      class="px-4 py-2 bg-red-600 active:scale-95 text-white text-lg md:text-xl rounded hover:bg-red-700 transition duration-150">
+      Subscribe to watch
+    </button>
+  </div>
+  {% elif video_link %}
+  <div class="w-full h-full bg-grey-700 relative">
+    <iframe src="{{ video_link }}" width='640' height='360' frameborder='0' allowfullscreen
+      referrerpolicy='no-referrer-when-downgrade' title='Video Player'
+      class="w-full h-full rounded-lg shadow-lg sproutvideo-player"></iframe>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+
+<div class="md:w-3/12 h-[600px] md:h-[37vw] md:inline-block overflow-scroll bg-blue-800 md:ml-2 text-white p-2 lg:p-4 rounded mt-1 md:mt-2 md:align-top">
+  
+  <h2 class="text-lg font-semibold mb-4">More in this playlist</h2>
+  {% for video in topic_videos %}
+  <div
+    class="grid text-left grid-cols-[auto,1fr] items-center mb-3 p-2 hover:bg-blue-700 rounded transition duration-150 cursor-pointer"
+    data-sugar="{{ video.id }}">
+    <img src="data:image/jpeg;base64,{{ video.thumbnail }}" class="w-20 h-12 mr-2 rounded">
+    <span class="font-medium">{{ video.videoName }}</span>
+  </div>
+  {% endfor %}
+  
+</div>
+{% endblock %}

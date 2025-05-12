@@ -105,8 +105,6 @@ function openSubscriptionOverlay() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // const accountDropdown = document.getElementById('login-status');
-  // const dropdownMenu = document.getElementById('dropdown-menu');
   const overlay = document.getElementById('login-overlay');
   const overlayBg = document.getElementById('overlay-bg'); // Translucent background
   const closeOverlay = document.getElementById('close-login-overlay'); // "X" button
@@ -114,20 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.getElementById('signup-form');
   const verificationForm = document.getElementById('verification-form');
 
-  //   accountDropdown.addEventListener('click', () => {
-  //     dropdownMenu.classList.toggle('hidden');
-  // });
-
-  // document.getElementById('mobile-menu-button').onclick = () => {
-  //   document.getElementById('mobile-menu').classList.toggle('hidden');
-  // };
 
   document.querySelectorAll('[data-role="login-signup"]').forEach(button => {
     button.addEventListener('click', () => {
-      // if (!dropdownMenu.classList.contains('hidden')) {
-      //   dropdownMenu.classList.add('hidden');
-      // }
-
       overlay.classList.remove('hidden');
       loginForm.classList.remove('hidden');
       signupForm.classList.add('hidden');
@@ -312,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const sugar = videoItem.dataset.sugar;
       const params = new URLSearchParams(window.location.search);
       // Ensure tea parameter remains
-      // if (!params.get('tea')) return console.log('returning');
+      // if (!params.get('tea')) return;
       params.set('sugar', sugar);
       window.location.search = params.toString();
     });

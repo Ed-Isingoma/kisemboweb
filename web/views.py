@@ -165,34 +165,39 @@ def home_view(request):
         except Session.DoesNotExist:
             pass
 
-    tea = request.GET.get('tea')
     sugar = request.GET.get('sugar')
 
-    if tea:
+    if sugar:
         try:
-            topic = Topic.objects.get(id=tea)
+            video = TopicVideo.objects.select_related('topicID').get(id=sugar)
+            topic = video.topicID
+
+            context['location_topic'] = topic.topicName
+            context['location_video'] = video.videoName
             context['topic_videos'] = TopicVideo.objects.filter(topicID=topic)
-            
-            if sugar:
-                video = TopicVideo.objects.get(id=sugar, topicID=topic)            
-                if context['is_authenticated']:
-                    has_subscription = Subscription.objects.filter(
-                        userID_id=user.id, 
-                        topicID_id=topic.id, 
-                        expiry__gt=timezone.now(),
-                        confirmed=True
-                    ).exists()
+            # the video links are being sent herein. maybe disable that later
 
-                    if has_subscription:
-                        context['video_link'] = video.videoLink
-                    else:
-                        context['subscription_needed'] = True
+            if context['is_authenticated']:
+                has_subscription = Subscription.objects.filter(
+                    userID_id=user.id,
+                    topicID_id=topic.id,
+                    expiry__gt=timezone.now(),
+                    confirmed=True
+                ).exists()
+
+                if has_subscription:
+                    context['video_link'] = video.videoLink
                 else:
-                    context['login_required'] = True
-                    
-        except (Topic.DoesNotExist, TopicVideo.DoesNotExist):
-            pass  # Handle invalid parameters quietly
+                    context['subscription_needed'] = True
+            else:
+                context['login_required'] = True
 
+        except TopicVideo.DoesNotExist:
+            pass  # Invalid video ID, ignore 
+    
+    if not request.GET:
+        context['picked_videos'] = TopicVideo.objects.order_by('?')[:20]
+        # the video links are being sent herein. maybe disable that later
 
     return render(request, 'home.html', context)
 
