@@ -6,10 +6,46 @@ async function logOut(e) {
       credentials: "same-origin",
       headers: { "X-CSRFToken": getCSRFToken() }
     });
-    window.location.reload(true); // Force full page refresh
+    window.location.reload(true);
   } catch (error) {
     console.error("Logout Error:", error);
     alert("Logout failed");
+  }
+}
+
+function logoutTrigg(e) {
+  e.preventDefault()
+  document.querySelector("#logout-overlay").classList.toggle('hidden')
+}
+
+function playlistsMenu(e) {
+  e.preventDefault()
+  const overlay = document.querySelector('#playlists-overlay')
+  overlay.classList.toggle('hidden')
+  const popup = overlay.querySelector('#popup-menu');
+  const rect = e.target.getBoundingClientRect();
+
+  popup.style.top = `${rect.top + window.scrollY + Number(rect.height/1.5)}px`;
+  popup.style.left = `${rect.left + window.scrollX}px`;
+}
+
+function togglePlaylistsAccord(btn) {
+  const content = btn.nextElementSibling;
+  const icon    = btn.querySelector('svg');
+
+  document.querySelectorAll('#playlists-accordion .content').forEach(div => {
+    if (div !== content) {
+      div.style.maxHeight = null;
+      div.previousElementSibling.querySelector('svg').classList.remove('rotate-180');
+    }
+  });
+
+  if (content.style.maxHeight) {
+    content.style.maxHeight = null;
+    icon.classList.remove('rotate-180');
+  } else {
+    content.style.maxHeight = content.scrollHeight + 'px';
+    icon.classList.add('rotate-180');
   }
 }
 
@@ -20,26 +56,6 @@ function getCSRFToken() {
     if (name === 'csrftoken') return value;
   }
   return '';
-}
-
-function selectCard(clickedCard) {
-  const cardsContainer = clickedCard.parentElement;
-  const oldCards = Array.from(cardsContainer.children);
-
-  const newCards = oldCards.map(oldCard => {
-    const isSelected = oldCard === clickedCard;
-    const newCard = document.createElement('div');
-
-    const baseClasses = Array.from(oldCard.classList)
-      .filter(c => c !== 'bg-blue-300')
-      .join(' ');
-    newCard.className = baseClasses + (isSelected ? ' bg-blue-300' : '');
-    newCard.innerHTML = oldCard.innerHTML;
-    newCard.onclick = () => selectCard(newCard);
-    return newCard;
-  });
-
-  cardsContainer.replaceChildren(...newCards);
 }
 
 function updateTimeLeft() {
@@ -66,35 +82,51 @@ function updateTimeLeft() {
 updateTimeLeft();
 setInterval(updateTimeLeft, 1000);
 
+function calculatePrice() {
+    const topicSelect = document.getElementById('topic-select');
+    const durationUnit = document.getElementById('duration-unit').value;
+    const durationAmount = parseFloat(document.getElementById('duration-amount').value) || 0;
+  
+    if (!topicSelect.value) return;
+  
+    const selectedOption = topicSelect.options[topicSelect.selectedIndex];
+    const unitPrice = parseFloat(selectedOption.dataset[durationUnit]);
+    const totalPrice = durationAmount * unitPrice;
+    console.log(totalPrice)
+    document.getElementById('total-price').textContent =
+      `UGX ${totalPrice}`;
+};
+
 function openSubscriptionOverlay() {
   document.querySelector('#subscription-overlay').classList.remove('hidden')
-  if (!document.getElementById('dropdown-menu').classList.contains('hidden')) {
-    document.getElementById('dropdown-menu').classList.add('hidden');
-  }
-
   const form = document.getElementById('subscription-form');
   form.reset();
+  document.getElementById('total-price').textContent = 'UGX 0';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const accountDropdown = document.getElementById('account-dropdown');
-  const dropdownMenu = document.getElementById('dropdown-menu');
-  const overlay = document.getElementById('overlay');
+  // const accountDropdown = document.getElementById('login-status');
+  // const dropdownMenu = document.getElementById('dropdown-menu');
+  const overlay = document.getElementById('login-overlay');
   const overlayBg = document.getElementById('overlay-bg'); // Translucent background
-  const closeOverlay = document.getElementById('close-overlay'); // "X" button
+  const closeOverlay = document.getElementById('close-login-overlay'); // "X" button
   const loginForm = document.getElementById('login-form');
   const signupForm = document.getElementById('signup-form');
   const verificationForm = document.getElementById('verification-form');
 
-  accountDropdown.addEventListener('click', () => {
-    dropdownMenu.classList.toggle('hidden');
-  });
+  //   accountDropdown.addEventListener('click', () => {
+  //     dropdownMenu.classList.toggle('hidden');
+  // });
+
+  // document.getElementById('mobile-menu-button').onclick = () => {
+  //   document.getElementById('mobile-menu').classList.toggle('hidden');
+  // };
 
   document.querySelectorAll('[data-role="login-signup"]').forEach(button => {
     button.addEventListener('click', () => {
-      if (!dropdownMenu.classList.contains('hidden')) {
-        dropdownMenu.classList.add('hidden');
-      }
+      // if (!dropdownMenu.classList.contains('hidden')) {
+      //   dropdownMenu.classList.add('hidden');
+      // }
 
       overlay.classList.remove('hidden');
       loginForm.classList.remove('hidden');
@@ -268,19 +300,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  document.querySelectorAll('li[data-topic]').forEach(item => {
-    item.addEventListener('click', () => {
-      const topicName = item.dataset.topic;
-      window.location.href = `?tea=${topicName}`;
-    });
-  });
+  // document.querySelectorAll('li[data-topic]').forEach(item => {
+  //   item.addEventListener('click', () => {
+  //     const topicName = item.dataset.topic;
+  //     window.location.href = `?tea=${topicName}`;
+  //   });
+  // });
 
   document.querySelectorAll('[data-sugar]').forEach(videoItem => {
     videoItem.addEventListener('click', () => {
       const sugar = videoItem.dataset.sugar;
       const params = new URLSearchParams(window.location.search);
       // Ensure tea parameter remains
-      if (!params.get('tea')) return;
+      // if (!params.get('tea')) return console.log('returning');
       params.set('sugar', sugar);
       window.location.search = params.toString();
     });
@@ -292,8 +324,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  document.getElementById('playlists-overlay')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('playlists-overlay')) {
+      e.target.classList.add('hidden');
+    }
+  });
+
   document.getElementById('notification-overlay')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('notification-overlay')) {
+      e.target.classList.add('hidden');
+    }
+  });
+
+  document.getElementById('logout-overlay')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('logout-overlay')) {
       e.target.classList.add('hidden');
     }
   });
@@ -302,24 +346,24 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
 
     const topicSelect = document.getElementById('topic-select');
+    const durationUnit = document.getElementById('duration-unit');
+    const durationAmount = document.getElementById('duration-amount');
     const mobileNumber = document.getElementById('mobile-number');
     const submitBtn = document.querySelector('#subscription-form button[type="submit"]');
-    const selectedDurCard = document.querySelector('.duration-card.bg-blue-300');
 
     const selectedTopic = topicSelect.options[topicSelect.selectedIndex];
     const topicId = selectedTopic.dataset.id;
     const userId = e.target.dataset.user;
 
-    if (!selectedDurCard) {
-      alert('Please select a duration');
-      return;
-    }
-
-    const selectedDurParent = selectedDurCard.parentElement;
-
     if (!topicId) {
       alert('Please select a topic');
       return;
+    }
+
+    const durationValue = parseFloat(durationAmount.value);
+    if (isNaN(durationValue) || durationValue <= 0) {
+      alert('Please enter a valid duration amount');
+      return
     }
 
     const mobileRegex = /^07\d{8}$/;
@@ -331,7 +375,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const subscriptionData = {
       topic_id: topicId,
       user_id: userId,
-      duration_card: Array.from(selectedDurParent.children).indexOf(selectedDurCard) + 1,
+      duration_unit: durationUnit.value,
+      duration_amount: durationValue,
       mobile_number: mobileNumber.value,
     };
 

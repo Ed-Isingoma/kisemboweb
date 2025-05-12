@@ -30,7 +30,8 @@ def subscribe(request):
 
             subscription_data = {
                 'topic_id': data.get('topic_id'),
-                'duration_card': data.get('duration_card'),
+                'duration_unit': data.get('duration_unit'),
+                'duration_amount': data.get('duration_amount'),
                 'mobile_number': data.get('mobile_number'),
             }
 
@@ -42,23 +43,17 @@ def subscribe(request):
             except Topic.DoesNotExist:
                 return JsonResponse({'error': 'Invalid topic'}, status=400)
 
-            # now = timezone.now()
-            # if subscription_data['duration_unit'] == 'monthly':
-            #     naive_expiry = timezone.make_naive(now) + relativedelta(months=+subscription_data['duration_amount'])
-            #     expiry = timezone.make_aware(naive_expiry)
-            # elif subscription_data['duration_unit'] == 'quarterly':
-            #     naive_expiry = timezone.make_naive(now) + relativedelta(months=+(subscription_data['duration_amount'] * 3))
-            #     expiry = timezone.make_aware(naive_expiry)
-
-            # now = timezone.now()
-            # if subscription_data['duration_unit'] == 'monthly':
-            #     expiry = now + relativedelta(months=subscription_data['duration_amount'])
-            # elif subscription_data['duration_unit'] == 'quarterly':
-            #     expiry = now + relativedelta(months=subscription_data['duration_amount'] * 3)
-
             now = timezone.now()
-            subscription_data['total_price'] = topic.monthlyPrice if subscription_data['duration_card'] == 1 else topic.quarterlyPrice
-            expiry = now + relativedelta(months=1 if subscription_data['duration_card'] == 1 else 3)
+            if subscription_data['duration_unit'] == 'daily':
+                expiry = now + timedelta(days=subscription_data['duration_amount'])
+                total_price = subscription_data['duration_amount'] * topic.dailyPrice
+            elif subscription_data['duration_unit'] == 'weekly':
+                expiry = now + timedelta(weeks=subscription_data['duration_amount'])
+                total_price = subscription_data['duration_amount'] * topic.weeklyPrice
+            elif subscription_data['duration_unit'] == 'monthly':
+                naive_expiry = timezone.make_naive(now) + relativedelta(months=+subscription_data['duration_amount'])
+                expiry = timezone.make_aware(naive_expiry)
+                total_price = subscription_data['duration_amount'] * topic.monthlyPrice
 
             subscription = Subscription.objects.create(
                 userID=user,
@@ -70,7 +65,7 @@ def subscribe(request):
             tx_ref = str(subscription.id)
             package = {
                 "tx_ref": tx_ref,
-                "amount": int(subscription_data['total_price']),
+                "amount": int(total_price),
                 "currency": "UGX",
                 "email": user.email,
                 "phone_number": '+256' + subscription_data['mobile_number'][1:],
@@ -121,8 +116,25 @@ def send_verification_email(email, code):
     ) 
 
 def home_view(request):
+    topics = Topic.objects.prefetch_related('topicvideo_set').all()
     context = {
-        'topics': Topic.objects.all(),
+        'topics': [
+            {
+                'id': topic.id,
+                'topicName': topic.topicName,
+                'dailyPrice': topic.dailyPrice,
+                'weeklyPrice': topic.weeklyPrice,
+                'monthlyPrice': topic.monthlyPrice,
+                'videos': [
+                    {
+                        'id': video.id, 
+                        'videoName': video.videoName
+                    }
+                    for video in topic.topicvideo_set.all()
+                ]
+            }
+            for topic in topics
+        ],
         'is_authenticated': False,
         'user': None,
         'user_subscriptions': None,
