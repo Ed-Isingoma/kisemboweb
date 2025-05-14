@@ -26,8 +26,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-o-!nknvrvdcsej^uj-j4xdd7poo$g0)g8o+vy0$_ia^36k2x-c'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+
+DEBUG = True
+# this is a windows thing
+NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", "kisemboweb.onrender.com", "kisemboacademy.com"]
 CSRF_TRUSTED_ORIGINS = ["https://kisemboweb.onrender.com", "https://kisemboacademy.com"]
@@ -63,7 +66,8 @@ if DEBUG:
     ]
 else:
     CORS_ALLOWED_ORIGINS = [
-        "https://kisemboacademy.com"
+        "https://kisemboacademy.com",
+        "https://kisemboweb.onrender.com"
     ]
 
 MIDDLEWARE = [
@@ -183,4 +187,11 @@ STATIC_ROOT= os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+# python manage.py tailwind start
+# static/css/input.css gets recreated
+# debug is set to true
+# NPM_BIN_PATH uncommented for windows
