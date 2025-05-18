@@ -129,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.getElementById('signup-form');
   const verificationForm = document.getElementById('verification-form');
 
-
   document.querySelectorAll('[data-role="login-signup"]').forEach(button => {
     button.addEventListener('click', () => {
       overlay.classList.remove('hidden');
@@ -304,21 +303,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // document.querySelectorAll('li[data-topic]').forEach(item => {
-  //   item.addEventListener('click', () => {
-  //     const topicName = item.dataset.topic;
-  //     window.location.href = `?tea=${topicName}`;
-  //   });
-  // });
-
   document.querySelectorAll('[data-sugar]').forEach(videoItem => {
     videoItem.addEventListener('click', () => {
       const sugar = videoItem.dataset.sugar;
-      const params = new URLSearchParams(window.location.search);
-      // Ensure tea parameter remains
-      // if (!params.get('tea')) return;
-      params.set('sugar', sugar);
-      window.location.search = params.toString();
+      // const params = new URLSearchParams(window.location.search);
+      // params.set('sugar', sugar);
+      // window.location.search = params.toString();
+      window.location.href = `?sugar=${sugar}`
     });
   });
 

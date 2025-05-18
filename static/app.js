@@ -306,11 +306,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-sugar]').forEach(videoItem => {
     videoItem.addEventListener('click', () => {
       const sugar = videoItem.dataset.sugar;
-      const params = new URLSearchParams(window.location.search);
-      // Ensure tea parameter remains
-      // if (!params.get('tea')) return;
-      params.set('sugar', sugar);
-      window.location.search = params.toString();
+      // const params = new URLSearchParams(window.location.search);
+      // params.set('sugar', sugar);
+      // window.location.search = params.toString();
+      window.location.href = `?sugar=${sugar}`
     });
   });
 
