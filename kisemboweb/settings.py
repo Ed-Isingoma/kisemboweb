@@ -61,7 +61,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    # "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 if DEBUG:
@@ -90,7 +89,7 @@ else:
             'PORT': os.getenv('DB_PORT'),
         }
     }
-    ALLOWED_HOSTS = ["127.0.0.1", "localhost", "kisemboweb.onrender.com", "kisemboacademy.com"]
+    ALLOWED_HOSTS = ["kisemboweb.onrender.com", "kisemboacademy.com"]
 
 
 
@@ -189,6 +188,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     # @tailwind utilities;
 
 # debug is set to true
+# allowed_hosts also should include localhost
 # NPM_BIN_PATH uncommented for windows
 
 # changed html, js files; collectstatic
