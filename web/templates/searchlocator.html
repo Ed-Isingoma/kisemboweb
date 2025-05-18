@@ -1,18 +1,17 @@
 {% load static %}
 
 {% block searchlocator %}
-<div class="bg-gray-50 border-b border-gray-200 py-4 px-6">
-    <div class="text-sm text-gray-600 font-medium flex items-center space-x-2" aria-label="Breadcrumb">
-        <span class="text-gray-500">Home</span>
-        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+
+<div class="bg-gray-50 border-b border-gray-200 p-2 md:px-6">
+    <nav aria-label="Breadcrumb">
+      <p class="max-w-[1096px] text-left mx-auto text-sm text-gray-600 whitespace-normal break-words">
+        Search results for:
+        <svg class="inline w-4 h-4 mx-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
-        <span class="text-gray-500">Search results for: </span>
-        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-        <span class="text-gray-900">{{ searchquery }}</span>
-    </div>
+        {{ searchquery }}        
+      </p>
+    </nav>
 </div>
 {% endblock %}
 

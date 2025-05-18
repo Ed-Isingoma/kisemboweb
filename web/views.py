@@ -14,6 +14,8 @@ from django.shortcuts import get_object_or_404
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.db.models import Q, Case, When, Value, IntegerField
+
 
 def subscribe(request):
     if request.method == 'POST':
@@ -110,7 +112,7 @@ def send_verification_email(email, code):
     send_mail(
         'Kisembo Academy Verification Code',
         f'Thank you for signing up on Kisembo Academy. Your verification code is: {code}',
-        settings.EMAIL_HOST_USER,  # Uses the email from settings.py
+        settings.EMAIL_HOST_USER, 
         [email],
         fail_silently=False,
     ) 
@@ -196,8 +198,30 @@ def home_view(request):
             pass  # Invalid video ID, ignore 
     
     if not request.GET:
-        context['picked_videos'] = TopicVideo.objects.order_by('?')[:20]
-        # the video links are being sent herein. maybe disable that later
+        fields = [f.name for f in TopicVideo._meta.fields if f.name != 'videoLink']
+        context['picked_videos'] = TopicVideo.objects.order_by('?').values(*fields)[:20]
+
+    if request.GET.get('search'):
+        q = request.GET.get('search')
+        context['searchquery'] = q
+
+        vids = TopicVideo.objects.annotate(
+            priority=Case(
+                When(videoName__icontains=q, then=Value(2)),   # videoName hits get top priority
+                When(topicID__topicName__icontains=q, then=Value(1)),  # topicName hits next
+                default=Value(0),
+                output_field=IntegerField()
+            )
+        ).filter(priority__gt=0).order_by('-priority')[:30]
+
+        context['picked_videos'] = [
+            {
+                'id': v.id,
+                'videoName': v.videoName,
+                'thumbnail': v.thumbnail
+            }
+            for v in vids
+        ]
 
     return render(request, 'home.html', context)
 

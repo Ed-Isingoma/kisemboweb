@@ -129,7 +129,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const signupForm = document.getElementById('signup-form');
   const verificationForm = document.getElementById('verification-form');
 
-
   document.querySelectorAll('[data-role="login-signup"]').forEach(button => {
     button.addEventListener('click', () => {
       overlay.classList.remove('hidden');
@@ -303,13 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
     }
   });
-
-  // document.querySelectorAll('li[data-topic]').forEach(item => {
-  //   item.addEventListener('click', () => {
-  //     const topicName = item.dataset.topic;
-  //     window.location.href = `?tea=${topicName}`;
-  //   });
-  // });
 
   document.querySelectorAll('[data-sugar]').forEach(videoItem => {
     videoItem.addEventListener('click', () => {
