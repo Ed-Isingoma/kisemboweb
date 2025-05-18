@@ -27,12 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-o-!nknvrvdcsej^uj-j4xdd7poo$g0)g8o+vy0$_ia^36k2x-c'
 
 
-DEBUG = True
+DEBUG = False
 # this is a windows thing
-NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
+# NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", "kisemboweb.onrender.com", "kisemboacademy.com"]
 CSRF_TRUSTED_ORIGINS = ["https://kisemboweb.onrender.com", "https://kisemboacademy.com"]
 
 # Application definition
@@ -53,23 +52,6 @@ INSTALLED_APPS = [
 
 TAILWIND_APP_NAME = 'theme' 
 
-if DEBUG:
-    CORS_ALLOWED_ORIGINS = [
-        "http://localhost:8000",
-        "http://localhost:5500",
-        "http://localhost:80",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:80",
-        "http://127.0.0.1:8000",
-        "http://127.0.0.1:5500"
-    ]
-else:
-    CORS_ALLOWED_ORIGINS = [
-        "https://kisemboacademy.com",
-        "https://kisemboweb.onrender.com"
-    ]
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -83,8 +65,34 @@ MIDDLEWARE = [
 ]
 
 if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    ALLOWED_HOSTS = ["*"]
     INSTALLED_APPS += ['django_browser_reload']
     MIDDLEWARE += ['django_browser_reload.middleware.BrowserReloadMiddleware']
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://kisemboacademy.com",
+        "https://kisemboweb.onrender.com"
+    ]
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_DATABASE'),
+            'USER': os.getenv('DB_USERNAME'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOSTNAME'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost", "kisemboweb.onrender.com", "kisemboacademy.com"]
+
+
 
 ROOT_URLCONF = 'kisemboweb.urls'
 
@@ -120,24 +128,6 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_DATABASE'),
-        'USER': os.getenv('DB_USERNAME'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOSTNAME'),
-        'PORT': os.getenv('DB_PORT'),
-    }
-}
 
 
 # Password validation
@@ -192,6 +182,14 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
 # python manage.py tailwind start
-# static/css/input.css gets recreated
+
+# static/css/input.css gets recreated. its content is  
+    # @tailwind base;
+    # @tailwind components;
+    # @tailwind utilities;
+
 # debug is set to true
 # NPM_BIN_PATH uncommented for windows
+
+# changed html, js files; collectstatic
+# changed database; makemigrations

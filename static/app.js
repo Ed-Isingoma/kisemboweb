@@ -82,6 +82,23 @@ function updateTimeLeft() {
 updateTimeLeft();
 setInterval(updateTimeLeft, 1000);
 
+function toggleLineClamp(event) {
+  if (window.innerWidth >= 768) return;
+  
+  event.stopPropagation();
+  
+  const image = event.currentTarget;
+  const textSpan = image.nextElementSibling?.querySelector('span');
+  
+  if (textSpan) {
+    const isClamped = textSpan.classList.contains('line-clamp-2');
+    textSpan.classList.toggle('line-clamp-2', !isClamped);
+    textSpan.classList.toggle('line-clamp-none', isClamped);
+    
+    textSpan.classList.toggle('underline', isClamped);
+  }
+}
+
 function calculatePrice() {
     const topicSelect = document.getElementById('topic-select');
     const durationUnit = document.getElementById('duration-unit').value;
