@@ -58,15 +58,15 @@
       <button type="submit"
         class="w-full py-2 bg-blue-600 text-white active:bg-blue-800 active:scale-95 rounded hover:bg-blue-700 transition duration-150">Log
         In</button>
+      
       <div class="flex justify-between mt-4">
-        <a href="#" id="forgot-password" class="text-blue-600 hover:underline">Forgot Password?</a>
+        <a href="{% url 'google_login' %}?next={{ request.get_full_path }}" id="google-login" class="text-blue-600 font-bold hover:underline">Log in with Google</a>
         <a href="#" id="switch-to-signup" class="text-blue-600 hover:underline">Sign Up Instead</a>
       </div>
     </form>
 
     <!-- Signup Form -->
     <form id="signup-form" class="hidden">
-      <p class="italic text-gray-500 text-sm mb-4">Sorry, signing up with your google account is currently disabled.</p>
       <input type="text" name="name" placeholder="Name" required
         class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:border-blue-500">
       <input type="email" name="email" placeholder="Email" required
@@ -78,8 +78,9 @@
       <button type="submit"
         class="w-full py-2 bg-blue-600 text-white active:bg-blue-800 active:scale-95 rounded hover:bg-blue-700 transition duration-150">Sign
         Up</button>
-      <div class="text-right mt-4">
-        <a href="#" id="switch-to-login" class="text-blue-600 hover:underline">Log In Instead</a>
+      <div class="flex justify-between mt-4">
+        <a href="{% url 'google_login' %}?next={{ request.get_full_path }}" id="google-signup" class="text-blue-600 font-bold hover:underline">Sign Up with Google</a>
+        <a href="#" id="switch-to-signup" class="text-blue-600 hover:underline">Log In Instead</a>
       </div>
     </form>
 

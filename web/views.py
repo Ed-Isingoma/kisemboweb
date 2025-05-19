@@ -1,20 +1,99 @@
-import uuid
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.http import JsonResponse
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
-import random
-import os
-import json
 from .models import Account, Session, Topic, TopicVideo, Subscription
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from django.shortcuts import get_object_or_404
-import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.db.models import Q, Case, When, Value, IntegerField
+import random
+import os
+import json
+import requests, uuid
+
+
+def google_login(request):
+    next_url = request.GET.get('next', '/')
+    request.session['oauth2_next'] = next_url
+
+    state = uuid.uuid4().hex
+    request.session['oauth2_state'] = state
+    params = {
+      'response_type': 'code',
+      'client_id':     settings.GOOGLE_OAUTH2_CLIENT_ID,
+      'redirect_uri':  settings.GOOGLE_OAUTH2_REDIRECT_URI,
+      'scope':         'openid email profile',
+      'state':         state,
+      'prompt':        'select_account',
+    }
+    url = 'https://accounts.google.com/o/oauth2/v2/auth'
+    return redirect(f"{url}?{'&'.join(f'{k}={v}' for k,v in params.items())}")
+
+def google_callback(request):
+    # 1) Validate state
+    if request.GET.get('state') != request.session.get('oauth2_state'):
+        return HttpResponse("Invalid state", status=400)
+
+    # 2) Exchange code for tokens
+    code = request.GET.get('code')
+    token_res = requests.post('https://oauth2.googleapis.com/token', data={
+      'code':          code,
+      'client_id':     settings.GOOGLE_OAUTH2_CLIENT_ID,
+      'client_secret': settings.GOOGLE_OAUTH2_CLIENT_SECRET,
+      'redirect_uri':  settings.GOOGLE_OAUTH2_REDIRECT_URI,
+      'grant_type':    'authorization_code',
+    }).json()
+    if 'error' in token_res:
+        return HttpResponse("Token error: " + token_res['error'], status=400)
+
+    # 3) Fetch userinfo
+    userinfo = requests.get(
+      'https://www.googleapis.com/oauth2/v3/userinfo',
+      headers={'Authorization': f"Bearer {token_res['access_token']}"}
+    ).json()
+    email = userinfo.get('email')
+    name  = userinfo.get('name') or email.split('@')[0]
+
+    # 4) Create or fetch your Account
+    acct, _ = Account.objects.get_or_create(
+      email=email,
+      defaults={'name': name, 'is_confirmed': True, 'password': str(uuid.uuid4())}
+    )
+
+    # 5) Create your Session + set cookies
+    session_id = uuid.uuid4().hex
+    Session.objects.create(
+      sessionID=session_id,
+      userID=acct,
+      expiry=timezone.now() + timezone.timedelta(days=1)
+    )
+
+    next_url = request.session.pop('oauth2_next', '/')
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8"></head>
+    <body onload="
+    if (window.opener) {{
+        window.opener.location.href = '{next_url}';
+        window.close();
+    }} else {{
+        window.location.href = '{next_url}';
+    }}
+    ">
+    </body>
+    </html>
+    """
+    response = HttpResponse(html, content_type="text/html")
+
+    response.set_cookie('sessionId', session_id, httponly=True)
+    response.set_cookie('userId',    acct.id,     httponly=True)
+    return response
+
 
 
 def subscribe(request):
